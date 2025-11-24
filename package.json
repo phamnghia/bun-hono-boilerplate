@@ -13,6 +13,7 @@
     "@hono/swagger-ui": "^0.5.2",
     "@hono/zod-openapi": "^1.1.5",
     "@scalar/hono-api-reference": "^0.9.25",
+    "@scalar/openapi-to-markdown": "^0.3.4",
     "drizzle-orm": "^0.44.7",
     "drizzle-zod": "^0.8.3",
     "hono": "^4.10.6",
