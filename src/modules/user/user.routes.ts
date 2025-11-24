@@ -1,10 +1,12 @@
-import { UserController } from "./user.controller";
-import { CreateUserSchema, UpdateUserSchema } from "./user.schema";
-
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { UserSchema } from "./user.schema";
+import { UserSchema, CreateUserSchema, UpdateUserSchema, UserResponseSchema } from "./user.schema";
+import { validationErrorResponse } from "../../utils/response";
+import { createResponseSchema, createErrorSchema } from "../../utils/openapi";
+import { UserController } from "./user.controller";
 
-const app = new OpenAPIHono();
+const app = new OpenAPIHono({
+    defaultHook: validationErrorResponse,
+});
 
 app.openapi(
     createRoute({
@@ -15,7 +17,7 @@ app.openapi(
             200: {
                 content: {
                     'application/json': {
-                        schema: z.array(UserSchema),
+                        schema: createResponseSchema(z.array(UserResponseSchema), 'Users retrieved successfully'),
                     },
                 },
                 description: 'Retrieve all users',
@@ -39,13 +41,26 @@ app.openapi(
             200: {
                 content: {
                     'application/json': {
-                        schema: UserSchema,
+                        schema: createResponseSchema(UserResponseSchema, 'User retrieved successfully'),
                     },
                 },
                 description: 'Retrieve a user',
             },
             404: {
+                content: {
+                    'application/json': {
+                        schema: createErrorSchema('User not found'),
+                    },
+                },
                 description: 'User not found',
+            },
+            400: {
+                content: {
+                    'application/json': {
+                        schema: createErrorSchema('Invalid ID'),
+                    },
+                },
+                description: 'Invalid ID',
             },
         },
     }),
@@ -70,10 +85,26 @@ app.openapi(
             201: {
                 content: {
                     'application/json': {
-                        schema: UserSchema,
+                        schema: createResponseSchema(UserResponseSchema, 'User created successfully'),
                     },
                 },
                 description: 'Create a user',
+            },
+            409: {
+                content: {
+                    'application/json': {
+                        schema: createErrorSchema('Email already exists'),
+                    },
+                },
+                description: 'Email already exists',
+            },
+            500: {
+                content: {
+                    'application/json': {
+                        schema: createErrorSchema('Failed to create user'),
+                    },
+                },
+                description: 'Internal Server Error',
             },
         },
     }),
@@ -101,10 +132,26 @@ app.openapi(
             200: {
                 content: {
                     'application/json': {
-                        schema: UserSchema,
+                        schema: createResponseSchema(UserResponseSchema, 'User updated successfully'),
                     },
                 },
                 description: 'Update a user',
+            },
+            404: {
+                content: {
+                    'application/json': {
+                        schema: createErrorSchema('User not found'),
+                    },
+                },
+                description: 'User not found',
+            },
+            400: {
+                content: {
+                    'application/json': {
+                        schema: createErrorSchema('Invalid ID'),
+                    },
+                },
+                description: 'Invalid ID',
             },
         },
     }),
@@ -123,7 +170,28 @@ app.openapi(
         },
         responses: {
             200: {
+                content: {
+                    'application/json': {
+                        schema: createResponseSchema(z.null().optional(), 'User deleted successfully'),
+                    },
+                },
                 description: 'User deleted',
+            },
+            404: {
+                content: {
+                    'application/json': {
+                        schema: createErrorSchema('User not found'),
+                    },
+                },
+                description: 'User not found',
+            },
+            400: {
+                content: {
+                    'application/json': {
+                        schema: createErrorSchema('Invalid ID'),
+                    },
+                },
+                description: 'Invalid ID',
             },
         },
     }),

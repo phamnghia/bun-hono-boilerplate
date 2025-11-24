@@ -1,53 +1,61 @@
 import type { Context } from "hono";
 import { UserService } from "./user.service";
+import { successResponse, errorResponse } from "../../utils/response";
+import { UserResponseSchema } from "./user.schema";
+import { z } from "zod";
 
 export const UserController = {
   getAll: async (c: Context) => {
     const users = await UserService.getAll();
-    return c.json(users);
+    const safeUsers = z.array(UserResponseSchema).parse(users);
+    return successResponse(c, safeUsers, "Users retrieved successfully");
   },
 
   getById: async (c: Context) => {
     const id = Number(c.req.param("id"));
-    if (isNaN(id)) return c.json({ error: "Invalid ID" }, 400);
+    if (isNaN(id)) return errorResponse(c, "Invalid ID", 400);
 
     const user = await UserService.getById(id);
-    if (!user) return c.json({ error: "User not found" }, 404);
+    if (!user) return errorResponse(c, "User not found", 404);
 
-    return c.json(user);
+    const safeUser = UserResponseSchema.parse(user);
+    return successResponse(c, safeUser, "User retrieved successfully");
   },
 
   create: async (c: Context) => {
     const data = c.req.valid("json");
     try {
       const user = await UserService.create(data);
-      return c.json(user, 201);
+      const safeUser = UserResponseSchema.parse(user);
+      return successResponse(c, safeUser, "User created successfully", 201);
     } catch (error: any) {
       if (error.code === '23505') { // Postgres unique violation
-        return c.json({ error: "Email already exists" }, 409);
+        return errorResponse(c, "Email already exists", 409);
       }
-      return c.json({ error: "Failed to create user" }, 500);
+      return errorResponse(c, "Failed to create user", 500, error);
     }
   },
 
   update: async (c: Context) => {
     const id = Number(c.req.param("id"));
-    if (isNaN(id)) return c.json({ error: "Invalid ID" }, 400);
+    if (isNaN(id)) return errorResponse(c, "Invalid ID", 400);
 
     const data = c.req.valid("json");
     const user = await UserService.update(id, data);
 
-    if (!user) return c.json({ error: "User not found" }, 404);
-    return c.json(user);
+    if (!user) return errorResponse(c, "User not found", 404);
+
+    const safeUser = UserResponseSchema.parse(user);
+    return successResponse(c, safeUser, "User updated successfully");
   },
 
   delete: async (c: Context) => {
     const id = Number(c.req.param("id"));
-    if (isNaN(id)) return c.json({ error: "Invalid ID" }, 400);
+    if (isNaN(id)) return errorResponse(c, "Invalid ID", 400);
 
     const user = await UserService.delete(id);
-    if (!user) return c.json({ error: "User not found" }, 404);
+    if (!user) return errorResponse(c, "User not found", 404);
 
-    return c.json({ message: "User deleted successfully" });
+    return successResponse(c, null, "User deleted successfully");
   },
 };

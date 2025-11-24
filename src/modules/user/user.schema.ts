@@ -1,14 +1,21 @@
 import { z } from "zod";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { createInsertSchema, createSelectSchema, createUpdateSchema } from "drizzle-zod";
 import { users } from "../../db/schema";
 
 export const UserSchema = createSelectSchema(users);
+export const UserResponseSchema = createSelectSchema(users).omit({
+  password: true,
+  googleId: true,
+});
 export const CreateUserSchema = createInsertSchema(users, {
   email: z.email(),
   password: z.string().min(6).optional(),
 }).omit({ id: true, createdAt: true, updatedAt: true, googleId: true });
 
-export const UpdateUserSchema = createInsertSchema(users).partial().omit({
+export const UpdateUserSchema = createUpdateSchema(users, {
+  email: z.email().optional(),
+  password: z.string().min(6).optional(),
+}).partial().omit({
   id: true,
   createdAt: true,
   updatedAt: true,
