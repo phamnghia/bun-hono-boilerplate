@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "drizzle-zod";
-import { users } from "../../db/schema";
+import { users } from "../../../db/schema";
 
 export const UserSchema = createSelectSchema(users);
 export const UserResponseSchema = createSelectSchema(users).omit({

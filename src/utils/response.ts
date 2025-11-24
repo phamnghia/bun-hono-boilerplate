@@ -31,11 +31,11 @@ export interface ValidationErrorResponse {
 
 // --- Helpers ---
 
-export const successResponse = <T>(
+export const ok = <T, S extends ContentfulStatusCode = 200>(
   c: Context,
   data: T,
   message?: string,
-  status: ContentfulStatusCode = 200,
+  status: S = 200 as S,
   meta?: SuccessResponse["meta"]
 ) => {
   return c.json(
@@ -49,10 +49,10 @@ export const successResponse = <T>(
   );
 };
 
-export const errorResponse = (
+export const fail = <S extends ContentfulStatusCode = 500>(
   c: Context,
   message: string,
-  status: ContentfulStatusCode = 500,
+  status: S = 500 as S,
   error?: any
 ) => {
   const response: ErrorResponse = {

@@ -5,7 +5,7 @@ import { cors } from "hono/cors";
 import userRoutes from "./modules/user/user.routes";
 import authRoutes from "./modules/auth/auth.routes";
 import { createMarkdownFromOpenApi } from "@scalar/openapi-to-markdown";
-import { errorResponse, validationErrorResponse } from "./utils/response";
+import { fail, validationErrorResponse } from "./utils/response";
 
 const app = new OpenAPIHono({
   defaultHook: validationErrorResponse,
@@ -15,11 +15,11 @@ app.use("*", logger());
 app.use("*", cors());
 
 app.onError((err, c) => {
-  return errorResponse(c, "Internal Server Error", 500, err);
+  return fail(c, "Internal Server Error", 500, err);
 });
 
 app.notFound((c) => {
-  return errorResponse(c, "Not Found", 404);
+  return fail(c, "Not Found", 404);
 });
 
 // Routes
