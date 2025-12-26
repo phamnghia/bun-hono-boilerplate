@@ -14,7 +14,8 @@ const store: RateLimitStore = {};
 setInterval(() => {
   const now = Date.now();
   for (const key in store) {
-    if (store[key]!.resetTime < now) {
+    const entry = store[key];
+    if (entry && entry.resetTime < now) {
       delete store[key];
     }
   }
@@ -29,6 +30,9 @@ export interface RateLimitOptions {
 /**
  * Rate limiting middleware
  * Limits the number of requests from a single IP/user within a time window
+ * 
+ * NOTE: This uses in-memory storage which won't work across multiple server instances.
+ * For production deployments with multiple instances, use Redis or a database-backed store.
  */
 export function rateLimit(options: RateLimitOptions = {}) {
   const {

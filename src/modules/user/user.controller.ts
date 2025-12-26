@@ -39,7 +39,9 @@ export const UserController = {
     const data = c.req.valid("json");
     try {
       const user = await UserService.create(data);
-      if (!user) throw new Error("Failed to create user");
+      if (!user) {
+        throw new ConflictError("Failed to create user");
+      }
       
       const safeUser = UserResponseSchema.parse(user);
       logger.info("User created", { userId: user.id, email: user.email });

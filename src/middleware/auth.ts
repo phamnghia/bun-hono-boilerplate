@@ -16,6 +16,20 @@ declare module "hono" {
 }
 
 /**
+ * Type guard to validate JWT payload structure
+ */
+function isValidJWTPayload(payload: unknown): payload is JWTPayload {
+  return (
+    typeof payload === "object" &&
+    payload !== null &&
+    "id" in payload &&
+    "email" in payload &&
+    typeof (payload as any).id === "number" &&
+    typeof (payload as any).email === "string"
+  );
+}
+
+/**
  * JWT Authentication middleware
  * Verifies the JWT token from Authorization header and adds user to context
  */
@@ -31,8 +45,13 @@ export const authenticate = async (c: Context, next: Next) => {
   try {
     const payload = await verify(token, appConfig.auth.jwtSecret);
     
-    // Add user to context (cast through unknown to avoid type conflicts)
-    c.set("user", payload as unknown as JWTPayload);
+    // Validate payload structure
+    if (!isValidJWTPayload(payload)) {
+      throw new UnauthorizedError("Invalid token payload structure");
+    }
+    
+    // Add user to context
+    c.set("user", payload);
     
     await next();
   } catch (error) {
@@ -56,7 +75,9 @@ export const optionalAuthenticate = async (c: Context, next: Next) => {
 
   try {
     const payload = await verify(token, appConfig.auth.jwtSecret);
-    c.set("user", payload as unknown as JWTPayload);
+    if (isValidJWTPayload(payload)) {
+      c.set("user", payload);
+    }
   } catch (error) {
     // Silently fail for optional auth
   }

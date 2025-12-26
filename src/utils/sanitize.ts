@@ -32,26 +32,38 @@ export function stripHtml(str: string): string {
 /**
  * Sanitize object by escaping all string values
  * @param obj - Object to sanitize
+ * @param depth - Current recursion depth (for safety)
+ * @param maxDepth - Maximum allowed recursion depth
  * @returns Sanitized object
  */
-export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
-  const sanitized = { ...obj };
+export function sanitizeObject<T extends Record<string, any>>(
+  obj: T,
+  depth: number = 0,
+  maxDepth: number = 10
+): T {
+  if (depth > maxDepth) {
+    throw new Error("Maximum recursion depth exceeded during sanitization");
+  }
 
-  for (const key in sanitized) {
-    const value = sanitized[key];
+  const sanitized = {} as T;
+
+  for (const key in obj) {
+    const value = obj[key];
     
     if (typeof value === "string") {
-      sanitized[key] = escapeHtml(value) as any;
+      sanitized[key] = escapeHtml(value) as T[typeof key];
     } else if (value && typeof value === "object" && !Array.isArray(value)) {
-      sanitized[key] = sanitizeObject(value);
+      sanitized[key] = sanitizeObject(value, depth + 1, maxDepth) as T[typeof key];
     } else if (Array.isArray(value)) {
-      sanitized[key] = value.map((item: any) =>
+      sanitized[key] = value.map((item: unknown) =>
         typeof item === "string"
           ? escapeHtml(item)
-          : typeof item === "object"
-          ? sanitizeObject(item)
+          : typeof item === "object" && item !== null
+          ? sanitizeObject(item as Record<string, any>, depth + 1, maxDepth)
           : item
-      ) as any;
+      ) as T[typeof key];
+    } else {
+      sanitized[key] = value;
     }
   }
 
@@ -66,10 +78,10 @@ export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
 export function sanitizeEmail(email: string): string | null {
   const trimmed = email.trim().toLowerCase();
   
-  // Basic email validation regex
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // More robust email validation regex (RFC 5322 simplified)
+  const emailRegex = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
   
-  if (!emailRegex.test(trimmed)) {
+  if (!emailRegex.test(trimmed) || trimmed.length > 254) {
     return null;
   }
   
