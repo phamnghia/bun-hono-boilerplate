@@ -1,0 +1,16 @@
+# Ignore everything
+*
+
+# Allow specific files
+!src/
+!drizzle/
+!package.json
+!bun.lock
+!tsconfig.json
+!drizzle.config.ts
+!.env.example
+
+# Ignore within allowed directories
+src/__tests__/
+**/*.test.ts
+**/*.spec.ts

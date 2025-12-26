@@ -1,7 +1,11 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { AuthService } from "./auth.service";
+import { AuthController } from "./auth.controller";
+import { errorHandler } from "../../middleware/error-handler";
 
 const app = new OpenAPIHono();
+
+// Apply error handler middleware
+app.use("*", errorHandler);
 
 app.openapi(
   createRoute({
@@ -14,9 +18,7 @@ app.openapi(
       },
     },
   }),
-  (c) => {
-    return c.redirect(AuthService.getGoogleAuthURL());
-  }
+  AuthController.googleLogin
 );
 
 app.openapi(
@@ -35,11 +37,15 @@ app.openapi(
         content: {
           "application/json": {
             schema: z.object({
-              token: z.string(),
-              user: z.object({
-                id: z.number(),
-                email: z.string(),
-                name: z.string().nullable(),
+              success: z.boolean().openapi({ example: true }),
+              message: z.string().optional().openapi({ example: "Authentication successful" }),
+              data: z.object({
+                token: z.string(),
+                user: z.object({
+                  id: z.number(),
+                  email: z.string(),
+                  name: z.string().nullable(),
+                }),
               }),
             }),
           },
@@ -47,21 +53,18 @@ app.openapi(
       },
       400: {
         description: "Login Failed",
+        content: {
+          "application/json": {
+            schema: z.object({
+              success: z.boolean().openapi({ example: false }),
+              message: z.string().openapi({ example: "No authorization code provided" }),
+            }),
+          },
+        },
       },
     },
   }),
-  async (c) => {
-    const code = c.req.query("code");
-    if (!code) return c.json({ error: "No code provided" }, 400);
-
-    try {
-      const googleUser = await AuthService.getGoogleUser(code);
-      const { user, token } = await AuthService.loginOrRegister(googleUser);
-      return c.json({ token, user });
-    } catch (error) {
-      return c.json({ error: "Authentication failed" }, 400);
-    }
-  }
+  AuthController.googleCallback
 );
 
 export default app;

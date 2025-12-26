@@ -1,6 +1,8 @@
 import type { Context } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { z } from "zod";
+import { AppError } from "./errors";
+import { appConfig } from "../config/app";
 
 // --- Interfaces ---
 
@@ -60,9 +62,17 @@ export const fail = <S extends ContentfulStatusCode = 500>(
     message,
   };
 
-  if (process.env.NODE_ENV !== "production" && error) {
-    response.error = error.message || String(error);
-    response.stack = error.stack;
+  // Only include error details in non-production environments
+  if (!appConfig.isProduction && error) {
+    if (error instanceof AppError) {
+      response.error = error.message;
+      response.stack = error.stack;
+    } else if (error instanceof Error) {
+      response.error = error.message;
+      response.stack = error.stack;
+    } else {
+      response.error = String(error);
+    }
   }
 
   return c.json(response, status);
