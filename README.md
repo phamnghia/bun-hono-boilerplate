@@ -79,6 +79,23 @@ bun run dev
 
 The API will be available at `http://localhost:3000`
 
+### Docker Setup (Alternative)
+
+Using Docker Compose:
+
+```bash
+# Build and start containers
+bun run docker:up
+
+# View logs
+bun run docker:logs
+
+# Stop containers
+bun run docker:down
+```
+
+The API will be available at `http://localhost:3000`, and PostgreSQL at `localhost:5432`
+
 ## 📖 API Documentation
 
 Once the server is running, visit:
@@ -245,12 +262,65 @@ console.log(appConfig.auth.jwtSecret); // string
 
 Generate a new migration:
 ```bash
-bun run drizzle-kit generate
+bun run db:generate
 ```
 
 Apply migrations:
 ```bash
-bun run drizzle-kit migrate
+bun run db:migrate
+```
+
+Open Drizzle Studio (Database GUI):
+```bash
+bun run db:studio
+```
+
+## 🚀 Deployment
+
+### Docker Deployment
+
+1. Build the Docker image:
+```bash
+docker build -t bun-hono-api .
+```
+
+2. Run with docker-compose:
+```bash
+docker-compose up -d
+```
+
+### Environment Variables for Production
+
+Ensure these are set in production:
+- `NODE_ENV=production`
+- `DATABASE_URL` - Your PostgreSQL connection string
+- `JWT_SECRET` - Strong secret (32+ characters)
+- `BASE_URL` - Your production URL
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` - If using OAuth
+
+### CI/CD
+
+GitHub Actions workflow is included in `.github/workflows/ci.yml`:
+- Runs tests on push/PR
+- Type checks code
+- Builds Docker image
+- Can be extended for deployment
+
+## 📝 Available Scripts
+
+```bash
+bun run dev           # Start development server with hot reload
+bun run start         # Start production server
+bun test              # Run tests
+bun run test:watch    # Run tests in watch mode
+bun run type-check    # Type check without emitting
+bun run db:generate   # Generate database migrations
+bun run db:migrate    # Apply database migrations
+bun run db:studio     # Open Drizzle Studio
+bun run docker:build  # Build Docker image
+bun run docker:up     # Start Docker containers
+bun run docker:down   # Stop Docker containers
+bun run docker:logs   # View Docker logs
 ```
 
 ## 🤝 Contributing
