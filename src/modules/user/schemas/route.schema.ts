@@ -2,6 +2,30 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { createErrorSchema, createResponseSchema } from "../../../utils/openapi";
 import { CreateUserSchema, UpdateUserSchema, UserResponseSchema } from "./user.schema";
 
+export const getMeRoute = createRoute({
+  method: 'get',
+  path: '/me',
+  tags: ['Users'],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      content: {
+        'application/json': {
+          schema: createResponseSchema(UserResponseSchema, 'Current user retrieved successfully'),
+        },
+      },
+      description: 'Get current authenticated user',
+    },
+    401: {
+      content: {
+        'application/json': {
+          schema: createErrorSchema('Unauthorized'),
+        },
+      },
+      description: 'Unauthorized',
+    },
+  },
+})
 
 export const getAllUsersRoute = createRoute({
   method: 'get',

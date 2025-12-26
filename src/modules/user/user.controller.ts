@@ -8,6 +8,16 @@ import { logger } from "../../utils/logger";
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from "../../constants";
 
 export const UserController = {
+  getMe: async (c: Context) => {
+    const currentUser = c.get("user");
+    const user = await UserService.getById(currentUser.id);
+    
+    if (!user) throw new NotFoundError(ERROR_MESSAGES.USER_NOT_FOUND);
+
+    const safeUser = UserResponseSchema.parse(user);
+    return ok(c, safeUser, SUCCESS_MESSAGES.USER_RETRIEVED);
+  },
+
   getAll: async (c: Context) => {
     const users = await UserService.getAll();
     const safeUsers = z.array(UserResponseSchema).parse(users);

@@ -8,6 +8,8 @@ import { createMarkdownFromOpenApi } from "@scalar/openapi-to-markdown";
 import { fail, validationErrorResponse } from "./utils/response";
 import { appConfig } from "./config/app";
 import { logger } from "./utils/logger";
+import { securityHeaders } from "./middleware/security";
+import { apiRateLimit, authRateLimit } from "./middleware/rate-limit";
 
 const app = new OpenAPIHono({
   defaultHook: validationErrorResponse,
@@ -16,6 +18,7 @@ const app = new OpenAPIHono({
 // Middleware
 app.use("*", honoLogger());
 app.use("*", cors(appConfig.cors));
+app.use("*", securityHeaders);
 
 // Error handling
 app.onError((err, c) => {
@@ -27,14 +30,14 @@ app.notFound((c) => {
   return fail(c, "Not Found", 404);
 });
 
-// Health check
+// Health check (no rate limit)
 app.get("/health", (c) => {
   return c.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// Routes
-app.route("/users", userRoutes);
-app.route("/auth", authRoutes);
+// Routes with rate limiting
+app.route("/users", userRoutes.use("*", apiRateLimit));
+app.route("/auth", authRoutes.use("*", authRateLimit));
 
 // OpenAPI Doc
 app.doc("/api-specs", {
@@ -42,6 +45,7 @@ app.doc("/api-specs", {
   info: {
     version: appConfig.api.version,
     title: appConfig.api.title,
+    description: "A well-structured Bun + Hono API boilerplate with authentication, security, and best practices",
   },
   servers: [
     { url: appConfig.baseUrl },
