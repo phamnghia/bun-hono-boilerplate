@@ -8,14 +8,21 @@ const envSchema = z.object({
     .min(32, "JWT_SECRET must be at least 32 characters long")
     .refine(
       (val) => {
-        // Check for sufficient entropy: no repeated patterns, mix of characters
-        const hasVariety = /[a-z]/.test(val) && /[A-Z]/.test(val) && /[0-9]/.test(val);
-        const noRepeats = !/(.)\1{4,}/.test(val); // No character repeated more than 4 times
-        return hasVariety && noRepeats;
+        // Check for sufficient entropy: mix of character types and no repeated patterns
+        const hasLowercase = /[a-z]/.test(val);
+        const hasUppercase = /[A-Z]/.test(val);
+        const hasNumbers = /[0-9]/.test(val);
+        const hasSpecial = /[^a-zA-Z0-9]/.test(val);
+        const noRepeats = !/(.)\1{4,}/.test(val); // No character repeated >4 times
+        
+        // Require at least 3 of 4 character types
+        const varietyCount = [hasLowercase, hasUppercase, hasNumbers, hasSpecial].filter(Boolean).length;
+        
+        return varietyCount >= 3 && noRepeats;
       },
       {
         message:
-          "JWT_SECRET must contain uppercase, lowercase, and numbers, and avoid repeated patterns",
+          "JWT_SECRET must contain at least 3 of: uppercase, lowercase, numbers, special characters. Avoid repeated patterns.",
       }
     ),
   GOOGLE_CLIENT_ID: z.string().optional(),

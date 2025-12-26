@@ -2,6 +2,11 @@
  * Input sanitization utilities to prevent XSS and injection attacks
  */
 
+// RFC 5322 simplified email validation regex (extracted for reusability)
+// Validates format: local-part@domain with proper character restrictions
+const EMAIL_REGEX = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
+const MAX_EMAIL_LENGTH = 254;
+
 /**
  * Escape HTML special characters to prevent XSS
  * @param str - String to sanitize
@@ -78,10 +83,7 @@ export function sanitizeObject<T extends Record<string, any>>(
 export function sanitizeEmail(email: string): string | null {
   const trimmed = email.trim().toLowerCase();
   
-  // More robust email validation regex (RFC 5322 simplified)
-  const emailRegex = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
-  
-  if (!emailRegex.test(trimmed) || trimmed.length > 254) {
+  if (!EMAIL_REGEX.test(trimmed) || trimmed.length > MAX_EMAIL_LENGTH) {
     return null;
   }
   
