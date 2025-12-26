@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "../../db";
 import { users } from "../../db/schema";
-import type { CreateUser, UpdateUser } from "./schemas/user.schema";
+import type { CreateUser, CreateUserWithOAuth, UpdateUser } from "./schemas/user.schema";
 
 export const UserService = {
   getAll: async () => {
@@ -18,7 +18,7 @@ export const UserService = {
     return result[0];
   },
 
-  create: async (data: CreateUser) => {
+  create: async (data: CreateUser | CreateUserWithOAuth) => {
     const result = await db.insert(users).values(data).returning();
     return result[0];
   },
